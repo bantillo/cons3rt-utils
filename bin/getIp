@@ -8,16 +8,17 @@ logTag=cons3rt-utils
 
 deployProps=$(getDeployProps)
 
-function main() {
-  role="$@"
-  if [ ! -n "$role" ]; then
-    logMessage -l debug "No role specified, defaulting to local role"
-    role=$(getRole)
-  fi
+ipType="externalIp"
 
-  grepString="cons3rt.fap.deployment.machine.$role.0.internalIp"
+function main() {
+
+  role=$1
+
+  grepString="cons3rt.fap.deployment.machine.$role.0.$ipType"
 
   value=$(cat $deployProps | grep -i $grepString | awk -F = '{ print $2 }')
+
+  echo $value
 
   if [ ! -n "$value" ]; then
     logMessage -l warn -t $logTag "IP Address for role \'${role}\' not found"
@@ -27,6 +28,21 @@ function main() {
   echo "$value"
 
   exit 0
+
+
 }
 
-main $@
+while [ "$1" != "" ]; do
+  case $1 in
+
+    -i | --internal)
+    ipType = "internalIp"
+    ;;
+    * )
+      main $@
+  esac
+  shift
+done
+
+
+
